@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIRST LAYER DETECTION SYSTEM</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Courier New', 'Share Tech Mono', monospace;
+            background: #0d0d0d;
+            color: #00ff88;
+            height: 100vh;
+            overflow: hidden;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+        .title {
+            font-size: 2.5em;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ff88;
+            letter-spacing: 2px;
+        }
+        .emergency-popup {
+            background: #330000;
+            border: 3px solid #ff4444;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px #ff4444;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: none;
+            animation: blink 0.5s infinite;
+        }
+        .emergency-popup.show {
+            display: block;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        .main-content {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            overflow: hidden;
+        }
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .camera-feed {
+            flex: 1;
+            background: #222;
+            border: 3px solid #0088ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0088ff;
+            font-size: 1.5em;
+            font-weight: bold;
+            box-shadow: 0 0 20px #0088ff;
+            animation: pulse 2s infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px #0088ff; }
+            50% { box-shadow: 0 0 40px #0088ff; }
+        }
+        .status-card {
+            background: #1a1a1a;
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 15px #00ff88;
+            font-size: 1.3em;
+            text-align: center;
+        }
+        .chart-container {
+            flex: 1.5;
+            background: #1a1a1a;
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 0 20px #00ff88;
+        }
+        .fault-log {
+            flex-shrink: 0;
+            background: #1a1a1a;
+            border: 2px solid #ff4444;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 15px #ff4444;
+            margin-top: 20px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .fault-entry {
+            color: #ff8888;
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        canvas {
+            max-height: 100%;
+        }
+        .current-accuracy {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00ff88;
+        }
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">FIRST LAYER DETECTION SYSTEM</div>
+            <div id="emergencyPopup" class="emergency-popup">
+                ⚠️ EMERGENCY: PRINT ERROR DETECTED! STOP PRINT IMMEDIATELY! ⚠️
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="camera-feed">LIVE CAMERA FEED</div>
+            </div>
+            <div style="display: flex; flex-direction: column; flex: 1; gap: 20px;">
+                <div class="status-card">
+                    Accuracy of Printing / Correctness of Printing<br>
+                    <span id="currentAccuracy" class="current-accuracy">94.7%</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="accuracyChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="fault-log" id="faultLog">
+            <div style="color: #888; margin-bottom: 10px;">FAULT LOG (Accuracy < 80%)</div>
+        </div>
+    </div>
+
+    <script>
+        // Chart setup
+        const ctx = document.getElementById('accuracyChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Accuracy %',
+                    data: [],
+                    borderColor: '#00ff88',
+                    backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: { color: '#333' },
+                        ticks: { color: '#00ff88' }
+                    },
+                    x: {
+                        grid: { color: '#333' },
+                        ticks: { color: '#00ff88', maxTicksLimit: 10 }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#00ff88' } }
+                }
+            }
+        });
+
+        // State
+        let accuracyData = [];
+        const FAULT_THRESHOLD = 80;
+        const popup = document.getElementById('emergencyPopup');
+        const currentAccSpan = document.getElementById('currentAccuracy');
+        const faultLog = document.getElementById('faultLog');
+
+        // Simulate live data
+        function updateData() {
+            const now = new Date();
+            const timeLabel = now.toLocaleTimeString('en-US', { hour12: false });
+            const accuracy = Math.max(0, Math.min(100, 95 + (Math.sin(now.getTime() / 10000) * 15) + (Math.random() * 10 - 5)));
+
+            // Update chart
+            accuracyData.push(accuracy);
+            chart.data.labels.push(timeLabel);
+            chart.data.datasets[0].data.push(accuracy);
+            if (accuracyData.length > 20) {
+                accuracyData.shift();
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
+            }
+            chart.update('none');
+
+            // Update status
+            currentAccSpan.textContent = accuracy.toFixed(1) + '%';
+
+            // Check fault
+            if (accuracy < FAULT_THRESHOLD) {
+                const faultMsg = `[${timeLabel}] FAULT DETECTED — Accuracy dropped to ${accuracy.toFixed(1)}%`;
+                const entry = document.createElement('div');
+                entry.className = 'fault-entry';
+                entry.textContent = faultMsg;
+                faultLog.appendChild(entry);
+                faultLog.scrollTop = faultLog.scrollHeight;
+
+                // Show popup
+                popup.classList.add('show');
+                setTimeout(() => popup.classList.remove('show'), 10000); // Hide after 10s
+            }
+        }
+
+        // Init
+        updateData();
+        setInterval(updateData, 1000);
+    </script>
+</body>
+</html>
+

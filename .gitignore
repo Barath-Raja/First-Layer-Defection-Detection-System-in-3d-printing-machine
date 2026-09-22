@@ -1,0 +1,26 @@
+# Local Python environments and caches
+venv/
+venv_new/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Local and generated data
+dataset/
+defect_images/
+logs/
+models/
+**/logs.json
+*.jsonl
+*.log
+
+# Machine-specific files
+.DS_Store
+.sixth/
+.vscode/
+
+# Generated media and temporary files
+*.pyc
+*.tmp
+*.temp
