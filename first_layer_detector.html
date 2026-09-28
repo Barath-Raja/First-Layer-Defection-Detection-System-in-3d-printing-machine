@@ -3,392 +3,553 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIRST LAYER DETECTION SYSTEM</title>
+    <title>3D PRINTER FIRST LAYER DEFECT DETECTION SYSTEM</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono:wght@400;700&display=swap');
-        
+        :root {
+            --bg-main: #0a0e17;
+            --card-bg: rgba(16, 24, 40, 0.85);
+            --card-border: rgba(0, 255, 170, 0.25);
+            --accent-green: #00ffaa;
+            --accent-red: #ff3366;
+            --accent-orange: #ff9900;
+            --accent-blue: #00d2ff;
+            --accent-purple: #9d4edd;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Share Tech Mono', 'Courier New', monospace;
-            background: #0d0d0d;
-            color: #00ff88;
-            height: 100vh;
-            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 210, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(0, 255, 170, 0.05) 0%, transparent 40%);
         }
-        
-        .dashboard {
-            height: 100vh;
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
             display: grid;
-            grid-template-columns: 1fr 350px;
-            grid-template-rows: 70px 120px 1fr 150px 130px;
-            grid-template-areas:
-                "header header"
-                "camera status"
-                "camera chart"
-                "logs chart"
-                "gallery gallery";
-            gap: 15px;
-            padding: 15px;
-            box-sizing: border-box;
+            grid-template-columns: 1fr 380px;
+            grid-template-rows: auto auto auto auto;
+            gap: 20px;
         }
-        
-        .header {
-            grid-area: header;
+
+        /* HEADER */
+        header {
+            grid-column: 1 / -1;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 20px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(0, 20, 20, 0.8);
-            padding: 0 30px;
-            border: 2px solid #00ff88;
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
-        
-        .title {
-            font-size: 2.2em;
-            font-weight: 700;
-            text-shadow: 0 0 20px #00ff88;
-            letter-spacing: 4px;
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
-        
-        .emergency-alert {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 999;
-            width: 60%;
-            min-height: 250px;
-            background: rgba(50, 0, 0, 0.95);
-            border: 4px solid #ff4444;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 0 100px rgba(255, 68, 68, 0.8);
-            animation: blink 1.5s infinite;
-            display: none;
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+            border-radius: 10px;
+            display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            text-align: center;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #000;
         }
-        
-        .emergency-alert.active {
+
+        .brand-text h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #ffffff, var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .system-badge {
             display: flex;
-            animation: shake 0.5s infinite, blink 1.5s infinite;
-        }
-        
-        .emergency-alert h2 {
-            color: #ff4444;
-            font-size: 1.8em;
-            margin-bottom: 15px;
-            text-shadow: 0 0 20px #ff4444;
-        }
-        
-        .emergency-alert p {
-            font-size: 1.1em;
-            line-height: 1.5;
-        }
-        
-        .status-card {
-            grid-area: status;
-            background: rgba(0, 20, 20, 0.8);
-            border: 2px solid #00ccff;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 0 30px rgba(0, 204, 255, 0.4);
-            text-align: center;
-            display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100%;
+            gap: 10px;
+            background: rgba(0, 255, 170, 0.1);
+            border: 1px solid var(--accent-green);
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--accent-green);
         }
-        
-        .status-label {
-            font-size: 1.1em;
-            margin-bottom: 20px;
-            color: #00ccff;
-            letter-spacing: 2px;
+
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-green);
+            animation: pulse 1.5s infinite;
         }
-        
-        .status-value {
-            font-size: 3.5em;
+
+        /* MAIN CAMERA FEED */
+        .camera-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
             font-weight: 700;
-            color: #00ff88;
-            text-shadow: 0 0 25px #00ff88;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--accent-blue);
         }
-        
-        .camera-feed {
-            grid-area: camera;
-            background: #1a1a1a;
-            border: 4px solid #00ccff;
-            border-radius: 20px;
+
+        .feed-container {
             position: relative;
-            box-shadow: 0 0 40px rgba(0, 204, 255, 0.5);
-            animation: pulse-blue 2s infinite;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .camera-placeholder {
-            width: 90%;
-            height: 90%;
-            background: linear-gradient(45deg, #2a2a2a, #1a1a1a);
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .camera-label {
-            font-size: 2em;
-            font-weight: 700;
-            color: #00ccff;
-            text-shadow: 0 0 20px #00ccff;
-            z-index: 2;
-            margin-bottom: 20px;
-            letter-spacing: 3px;
-        }
-        
-        .live-indicator {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 255, 136, 0.3);
-            border: 2px solid #00ff88;
-            border-radius: 20px;
-            padding: 8px 16px;
-            font-size: 1em;
-            animation: blink-green 1s infinite;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
-        }
-        
-        .chart-panel {
-            grid-area: chart;
-            height: 100%;
             width: 100%;
-            background: rgba(0, 20, 20, 0.8);
-            border: 2px solid #00ff88;
+            height: 520px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(0, 210, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feed-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .live-overlay-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid var(--accent-green);
+            padding: 6px 14px;
             border-radius: 20px;
-            padding: 15px;
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-green);
+            z-index: 10;
+        }
+
+        /* SIMULATION TOOLBAR */
+        .sim-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .sim-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sim-btn:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-blue);
+            background: rgba(0, 210, 255, 0.15);
+        }
+
+        .sim-btn.active {
+            background: var(--accent-blue);
+            color: #000;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+        }
+
+        .sim-btn.danger:hover {
+            border-color: var(--accent-red);
+            background: rgba(255, 51, 102, 0.2);
+        }
+
+        .sim-btn.warning:hover {
+            border-color: var(--accent-orange);
+            background: rgba(255, 153, 0, 0.2);
+        }
+
+        /* SIDEBAR DIAGNOSTICS */
+        .sidebar {
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            gap: 20px;
         }
-        
-        .chart-panel canvas {
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card.defect-alert {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 25px rgba(255, 51, 102, 0.3);
+            animation: pulse-red 1.5s infinite;
+        }
+
+        .stat-card.warning-alert {
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 25px rgba(255, 153, 0, 0.3);
+        }
+
+        .stat-header {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-green);
+        }
+
+        .stat-subtext {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .accuracy-readout {
+            font-size: 3rem;
+            font-weight: 800;
+            text-align: center;
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-green);
+            text-shadow: 0 0 20px rgba(0, 255, 170, 0.4);
+        }
+
+        /* LOWER PANELS: CHART & FAULT LOG */
+        .chart-panel {
+            grid-column: 1 / 2;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            height: 320px;
+        }
+
+        .log-panel {
+            grid-column: 2 / 3;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            height: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .log-list {
             flex-grow: 1;
-        }
-        
-        .chart-title {
-            text-align: center;
-            font-size: 1.3em;
-            margin-bottom: 20px;
-            color: #00ff88;
-            letter-spacing: 2px;
-        }
-        
-        .fault-log {
-            grid-area: logs;
-            background: rgba(20, 20, 20, 0.9);
-            border: 2px solid #ff4444;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 0 30px rgba(255, 68, 68, 0.3);
             overflow-y: auto;
-            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-        
-        .log-title {
-            font-size: 1.4em;
-            margin-bottom: 20px;
-            color: #ff4444;
-            text-align: center;
-            letter-spacing: 2px;
+
+        .log-item {
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 4px solid var(--accent-green);
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-family: 'Share Tech Mono', monospace;
         }
-        
-        .log-entry {
-            background: rgba(255, 68, 68, 0.1);
-            padding: 12px;
-            margin-bottom: 10px;
-            border-left: 4px solid #ff4444;
-            border-radius: 5px;
-            font-size: 0.95em;
-            animation: slideIn 0.3s ease-out;
+
+        .log-item.defect-m1 {
+            border-left-color: var(--accent-red);
+            background: rgba(255, 51, 102, 0.1);
         }
-        
-        /* Snapshot Gallery Settings */
-        .snapshot-gallery {
-            grid-area: gallery;
-            background: rgba(0, 15, 15, 0.9);
-            border: 2px solid #00ff88;
-            border-radius: 15px;
-            padding: 10px 20px;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+
+        .log-item.defect-m2 {
+            border-left-color: var(--accent-orange);
+            background: rgba(255, 153, 0, 0.1);
+        }
+
+        /* SNAPSHOT GALLERY */
+        .gallery-panel {
+            grid-column: 1 / -1;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .gallery-scroll {
             display: flex;
             gap: 15px;
             overflow-x: auto;
-            align-items: center;
+            padding: 10px 0;
         }
 
-        .snapshot-gallery::-webkit-scrollbar {
-            height: 8px;
-        }
-        .snapshot-gallery::-webkit-scrollbar-thumb {
-            background: #00ff88;
-            border-radius: 4px;
-        }
-
-        .gallery-item {
-            position: relative;
-            flex: 0 0 auto;
-            height: 100%;
-            border: 2px solid #ff4444;
+        .gallery-card {
+            flex: 0 0 160px;
+            height: 120px;
+            background: #000;
             border-radius: 10px;
             overflow: hidden;
-            animation: slideIn 0.5s ease-out;
+            border: 2px solid var(--accent-red);
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s ease;
         }
 
-        .gallery-item img {
-            height: 90px;
-            width: auto;
-            display: block;
+        .gallery-card:hover {
+            transform: scale(1.05);
+        }
+
+        .gallery-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .gallery-label {
             position: absolute;
             bottom: 0;
-            left: 0;
             width: 100%;
-            background: rgba(255, 68, 68, 0.85);
-            color: #fff;
-            font-size: 0.7em;
+            background: rgba(255, 51, 102, 0.85);
+            font-size: 0.68rem;
+            font-weight: 700;
             text-align: center;
-            padding: 2px 0;
-            font-weight: bold;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+            padding: 4px 0;
+            color: #fff;
         }
-        
-        /* Animations */
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0.3; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
         }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+
+        @keyframes pulse-red {
+            0%, 100% { border-color: var(--accent-red); }
+            50% { border-color: rgba(255, 51, 102, 0.3); }
         }
-        
-        @keyframes pulse-blue {
-            0% { box-shadow: 0 0 20px rgba(0, 204, 255, 0.5); }
-            50% { box-shadow: 0 0 40px rgba(0, 204, 255, 0.8); }
-            100% { box-shadow: 0 0 20px rgba(0, 204, 255, 0.5); }
-        }
-        
-        @keyframes blink-green {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0.4; }
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @media (max-width: 850px) {
-            body { 
-                overflow-y: auto; 
-                height: auto; 
-            }
-            .dashboard {
-                height: auto;
+
+        @media (max-width: 1024px) {
+            .dashboard-container {
                 grid-template-columns: 1fr;
-                grid-template-rows: 70px 300px 120px 300px 200px 150px;
-                grid-template-areas:
-                    "header"
-                    "camera"
-                    "status"
-                    "chart"
-                    "logs"
-                    "gallery";
-                gap: 15px;
+            }
+            .chart-panel, .log-panel {
+                grid-column: 1 / -1;
             }
         }
     </style>
 </head>
 <body>
-    <div class="dashboard">
-        <div class="header">
-            <div class="title">FIRST LAYER DETECTION SYSTEM</div>
+    <div class="dashboard-container">
+        <!-- HEADER -->
+        <header>
+            <div class="brand-title">
+                <div class="brand-icon">3D</div>
+                <div class="brand-text">
+                    <h1>FIRST LAYER DEFECT DETECTION SYSTEM</h1>
+                    <p>Computer Vision Architecture for Extrusion & Adhesion Failure Modes</p>
+                </div>
+            </div>
+            <div class="system-badge" id="systemBadge">
+                <div class="pulse-dot"></div>
+                <span id="systemStatusText">SYSTEM ACTIVE · ONLINE</span>
+            </div>
+        </header>
+
+        <!-- MAIN CAMERA FEED -->
+        <div class="camera-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    📷 LIVE NOZZLE & BED INSPECTION FEED
+                </div>
+                <div style="font-family: 'Share Tech Mono', monospace; font-size:0.85rem; color: var(--text-muted);">
+                    PORT 5001 · 640x480 MJPEG
+                </div>
+            </div>
+            <div class="feed-container">
+                <div class="live-overlay-badge" id="feedBadge">LIVE CAMERA</div>
+                <img id="camFeed" src="/video_feed" alt="Live Inspection Camera Feed">
+            </div>
+
+            <!-- SIMULATION CONTROLS TOOLBAR -->
+            <div class="sim-toolbar">
+                <span style="font-size:0.8rem; font-weight:700; color: var(--text-muted); align-self:center; margin-right:5px;">TEST SIMULATION MODE:</span>
+                <button class="sim-btn active" onclick="setSimMode('reset', this)">🟢 Live Camera</button>
+                <button class="sim-btn" onclick="setSimMode('normal', this)">🟢 Normal Print</button>
+                <button class="sim-btn danger" onclick="setSimMode('no_extrusion', this)">🔴 Model 1: No Extrusion</button>
+                <button class="sim-btn danger" onclick="setSimMode('insufficient_extrusion', this)">🔴 Model 1: Insufficient (75%)</button>
+                <button class="sim-btn warning" onclick="setSimMode('floating_thread', this)">🟠 Model 2: Floating Thread</button>
+                <button class="sim-btn warning" onclick="setSimMode('dragging', this)">🟠 Model 2: Dragging Strand</button>
+            </div>
         </div>
-        
-        <div class="camera-feed">
-<img id="camImg" src="http://localhost:5001/video_feed"
-  style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:1;border-radius:15px;background:#000;"
-  onerror="this.style.display='none'; document.getElementById('camFallback').style.display='flex'; document.querySelector('.live-indicator').textContent='NO FEED';">
-<div id="camFallback" class="camera-placeholder" style="display:none;">
-    <div class="live-indicator">NO FEED</div>
-    <div class="camera-label">CONNECT CAM · Port 5001</div>
-</div>
+
+        <!-- SIDEBAR DIAGNOSTICS -->
+        <div class="sidebar">
+            <!-- Overall Status Card -->
+            <div class="stat-card" id="primaryStatusCard">
+                <div class="stat-header">
+                    <span>PRIMARY FAULT STATE</span>
+                    <span>AI DIAGNOSTIC</span>
+                </div>
+                <div class="stat-value" id="primaryStatusText">NORMAL</div>
+                <div class="stat-subtext" id="primaryStatusSub">First layer filament depositing and adhering correctly.</div>
+            </div>
+
+            <!-- Model 1 Extrusion Card -->
+            <div class="stat-card" id="m1Card">
+                <div class="stat-header">
+                    <span>MODEL 1: EXTRUSION DIAGNOSTIC</span>
+                    <span>NOZZLE & PATH</span>
+                </div>
+                <div class="stat-value" style="font-size:1.4rem;" id="m1Text">NORMAL_EXTRUSION</div>
+                <div class="stat-subtext">Monitors filament supply, nozzle orifice output, and print path continuity.</div>
+            </div>
+
+            <!-- Model 2 Bed Adhesion Card -->
+            <div class="stat-card" id="m2Card">
+                <div class="stat-header">
+                    <span>MODEL 2: BED ADHESION</span>
+                    <span>BED CONTACT</span>
+                </div>
+                <div class="stat-value" style="font-size:1.4rem;" id="m2Text">NORMAL_ADHESION</div>
+                <div class="stat-subtext">Detects thread-like structures, floating strands, and line drag behind nozzle.</div>
+            </div>
+
+            <!-- Accuracy Card -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span>FIRST LAYER QUALITY ACCURACY</span>
+                    <span>CONFIDENCE Score</span>
+                </div>
+                <div class="accuracy-readout" id="accuracyValue">98.5%</div>
+                <div class="stat-subtext" style="text-align:center;" id="confidenceSub">Model Confidence: 98.5%</div>
+            </div>
         </div>
-        
-        <div class="emergency-alert" id="emergencyAlert">
-            <h2>🚨 EMERGENCY STOP REQUIRED</h2>
-            <p>PRINT ERROR DETECTED<br>First layer failure confirmed</p>
-        </div>
-        
-        <div class="status-card">
-            <div class="status-label">Accuracy of Printing / Correctness of Printing</div>
-            <div class="status-value" id="accuracyValue">94.7%</div>
-        </div>
-        
+
+        <!-- LIVE ACCURACY CHART -->
         <div class="chart-panel">
-            <div class="chart-title">LIVE ACCURACY CHART</div>
-            <canvas id="accuracyChart"></canvas>
+            <div class="panel-header" style="margin-bottom: 10px;">
+                <div class="panel-title">📈 REAL-TIME PRINT ACCURACY TREND</div>
+            </div>
+            <div style="height: 250px; position: relative;">
+                <canvas id="accuracyChart"></canvas>
+            </div>
         </div>
-        
-        <div class="fault-log">
-            <div class="log-title">FAULT LOG</div>
-            <div id="faultLog"></div>
+
+        <!-- FAULT LOG -->
+        <div class="log-panel">
+            <div class="panel-header">
+                <div class="panel-title" style="color: var(--accent-red);">🚨 FAULT AUDIT LOG</div>
+            </div>
+            <div class="log-list" id="faultLogList">
+                <div class="log-item">[00:00:00] SYSTEM INITIALIZED — Monitoring first layer extrusion and bed contact.</div>
+            </div>
         </div>
-        
-        <!-- Live Defect Snapshot Gallery -->
-        <div class="snapshot-gallery" id="snapshotGallery">
-            <!-- Images will populate here -->
+
+        <!-- DEFECT SNAPSHOT GALLERY -->
+        <div class="gallery-panel">
+            <div class="panel-header" style="margin-bottom:10px;">
+                <div class="panel-title" style="color: var(--accent-green);">📸 RECENT DEFECT SNAPSHOT GALLERY</div>
+            </div>
+            <div class="gallery-scroll" id="snapshotGallery">
+                <div style="color: var(--text-muted); font-size: 0.85rem;">No defect snapshots captured yet. System running cleanly.</div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Live accuracy chart
+        // Chart initialization
         const ctx = document.getElementById('accuracyChart').getContext('2d');
         const accuracyChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: [],
                 datasets: [{
-                    label: 'Accuracy %',
+                    label: 'First Layer Accuracy (%)',
                     data: [],
-                    borderColor: '#00ff88',
-                    backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                    borderColor: '#00ffaa',
+                    backgroundColor: 'rgba(0, 255, 170, 0.08)',
                     borderWidth: 3,
-                    tension: 0.4,
+                    tension: 0.3,
                     fill: true,
-                    pointBackgroundColor: '#00ff88',
-                    pointBorderColor: '#000',
-                    pointBorderWidth: 2,
-                    pointRadius: 5
+                    pointRadius: 4,
+                    pointBackgroundColor: '#00ffaa'
                 }]
             },
             options: {
@@ -398,138 +559,165 @@
                     y: {
                         beginAtZero: true,
                         max: 100,
-                        grid: { color: 'rgba(0, 255, 136, 0.1)' },
-                        ticks: { color: '#00ccff' }
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8' }
                     },
                     x: {
-                        grid: { color: 'rgba(0, 255, 136, 0.1)' },
-                        ticks: { color: '#00ccff', maxTicksLimit: 10 }
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8', maxTicksLimit: 8 }
                     }
                 },
                 plugins: {
-                    legend: { labels: { color: '#00ff88' } }
+                    legend: { labels: { color: '#e2e8f0' } }
                 }
             }
         });
 
-        // Real ML Data Integration
-        let accuracyData = [];
-        let chartLabels = [];
+        let accuracyHistory = [];
+        let timeHistory = [];
         let lastFaultTime = 0;
-        
+
         async function updateDashboard() {
             try {
-                const response = await fetch('/api/predict');
-                if (!response.ok) return;
-                const data = await response.json();
+                const res = await fetch('/api/predict');
+                if (!res.ok) return;
+                const data = await res.json();
+
+                // 1. Update Primary Status Card
+                const primaryCard = document.getElementById('primaryStatusCard');
+                const primaryText = document.getElementById('primaryStatusText');
+                const primarySub = document.getElementById('primaryStatusSub');
+
+                primaryText.textContent = data.status;
+
+                if (data.status === 'FILAMENT_NOT_DEPOSITED') {
+                    primaryCard.className = 'stat-card defect-alert';
+                    primaryText.style.color = 'var(--accent-red)';
+                    primarySub.textContent = 'CRITICAL EXTRUSION FAILURE: No filament arriving at nozzle or empty path.';
+                } else if (data.status === 'FILAMENT_NOT_ADHERING') {
+                    primaryCard.className = 'stat-card warning-alert';
+                    primaryText.style.color = 'var(--accent-orange)';
+                    primarySub.textContent = 'ADHESION FAILURE: Filament extruding but floating or failing to contact print bed.';
+                } else {
+                    primaryCard.className = 'stat-card';
+                    primaryText.style.color = 'var(--accent-green)';
+                    primarySub.textContent = 'First layer filament depositing and adhering correctly.';
+                }
+
+                // 2. Update Model 1 & Model 2 readout
+                document.getElementById('m1Text').textContent = data.model1_extrusion;
+                document.getElementById('m2Text').textContent = data.model2_adhesion;
+
+                // 3. Update Accuracy Readout
+                const accuracy = data.accuracy.toFixed(1);
+                document.getElementById('accuracyValue').textContent = accuracy + '%';
+                document.getElementById('confidenceSub').textContent = `Model Confidence: ${(data.confidence * 100).toFixed(1)}%`;
+
+                // 4. Update Chart
+                const nowStr = new Date().toLocaleTimeString();
+                accuracyHistory.push(accuracy);
+                timeHistory.push(nowStr);
+
+                if (accuracyHistory.length > 40) {
+                    accuracyHistory.shift();
+                    timeHistory.shift();
+                }
+
+                accuracyChart.data.labels = timeHistory;
+                accuracyChart.data.datasets[0].data = accuracyHistory;
                 
-                // Convert ML confidence (0-1) to an Accuracy Percentage (0-100)
-                // If it detects a fault (Over/Under extrusion), we invert it so the visual graph accurately drops!
-                let accuracy = data.confidence * 100;
+                // Color chart red if accuracy drops
                 if (data.is_defect) {
-                    accuracy = 100 - accuracy; 
+                    accuracyChart.data.datasets[0].borderColor = '#ff3366';
+                    accuracyChart.data.datasets[0].pointBackgroundColor = '#ff3366';
+                } else {
+                    accuracyChart.data.datasets[0].borderColor = '#00ffaa';
+                    accuracyChart.data.datasets[0].pointBackgroundColor = '#00ffaa';
                 }
-                
-                const accuracyPercent = accuracy.toFixed(1);
-                
-                // Update status display
-                document.getElementById('accuracyValue').textContent = accuracyPercent + '%';
-                
-                // Update chart arrays
-                const timeLabel = new Date().toLocaleTimeString();
-                accuracyData.push(accuracy);
-                chartLabels.push(timeLabel);
-                
-                if (accuracyData.length > 50) {
-                    accuracyData.shift();
-                    chartLabels.shift();
-                }
-                
-                accuracyChart.data.labels = chartLabels;
-                accuracyChart.data.datasets[0].data = accuracyData;
                 accuracyChart.update('none');
-                
-                // Check physically for faults (ML flagged it, or accuracy drops below 80%)
-                if (data.is_defect || accuracy < 80) {
-                    showEmergencyAlert();
-                    
+
+                // 5. Fault Log trigger
+                if (data.is_defect) {
                     const now = Date.now();
-                    if (now - lastFaultTime > 2000) {
-                        addFaultLog(accuracyPercent, timeLabel, data.status);
+                    if (now - lastFaultTime > 3000) {
+                        addFaultLog(data.status, data.model1_extrusion, data.model2_adhesion, accuracy);
                         lastFaultTime = now;
                     }
                 }
-                
-                // Update Snapshot Gallery
-                if (data.recent_snapshots) {
-                   updateGallery(data.recent_snapshots);
+
+                // 6. Update Snapshot Gallery
+                if (data.recent_snapshots && data.recent_snapshots.length > 0) {
+                    renderGallery(data.recent_snapshots);
                 }
+
+                // 7. Update feed badge if sim mode active
+                const feedBadge = document.getElementById('feedBadge');
+                if (data.sim_mode) {
+                    feedBadge.textContent = `SIMULATION: ${data.sim_mode.toUpperCase()}`;
+                    feedBadge.style.borderColor = 'var(--accent-blue)';
+                    feedBadge.style.color = 'var(--accent-blue)';
+                } else {
+                    feedBadge.textContent = 'LIVE CAMERA';
+                    feedBadge.style.borderColor = 'var(--accent-green)';
+                    feedBadge.style.color = 'var(--accent-green)';
+                }
+
             } catch (err) {
-                console.error("Backend offline or ML model unreachable:", err);
+                console.error("Dashboard update error:", err);
             }
         }
-        
-        let currentSnapshots = [];
-        function updateGallery(snapshots) {
-            // Only re-render if the array actually changed (optimization)
-            if (JSON.stringify(snapshots) === JSON.stringify(currentSnapshots)) return;
-            currentSnapshots = snapshots;
-            
+
+        async function setSimMode(mode, btnElem) {
+            document.querySelectorAll('.sim-btn').forEach(b => b.classList.remove('active'));
+            btnElem.classList.add('active');
+            await fetch(`/api/simulate/${mode}`, { method: 'POST' });
+        }
+
+        function addFaultLog(status, m1, m2, acc) {
+            const list = document.getElementById('faultLogList');
+            const item = document.createElement('div');
+            const now = new Date().toLocaleTimeString();
+
+            if (status === 'FILAMENT_NOT_DEPOSITED') {
+                item.className = 'log-item defect-m1';
+                item.textContent = `[${now}] 🚨 MODEL 1 EXTRUSION FAILURE — ${m1} (Acc: ${acc}%)`;
+            } else {
+                item.className = 'log-item defect-m2';
+                item.textContent = `[${now}] ⚠️ MODEL 2 ADHESION FAILURE — ${m2} (Acc: ${acc}%)`;
+            }
+            list.insertBefore(item, list.firstChild);
+
+            while (list.children.length > 20) {
+                list.removeChild(list.lastChild);
+            }
+        }
+
+        let currentSnaps = [];
+        function renderGallery(snapshots) {
+            if (JSON.stringify(snapshots) === JSON.stringify(currentSnaps)) return;
+            currentSnaps = snapshots;
+
             const gallery = document.getElementById('snapshotGallery');
-            gallery.innerHTML = ''; // clear current
-            
+            gallery.innerHTML = '';
+
             snapshots.forEach(filename => {
-                // filename example: defect_under_20260417_184502.jpg
-                const parts = filename.replace('.jpg', '').split('_');
-                const type = parts[1] ? parts[1].toUpperCase() : 'DEFECT';
-                const timeString = parts[2] && parts[3] ? 
-                    `${parts[2].slice(4,6)}/${parts[2].slice(6,8)} ${parts[3].slice(0,2)}:${parts[3].slice(2,4)}` : '';
-                
-                const div = document.createElement('div');
-                div.className = 'gallery-item';
-                div.innerHTML = `
-                    <img src="/defect_images/${filename}" alt="Defect Snapshot" onerror="this.src=''">
-                    <div class="gallery-label">${type} FAIL ${timeString}</div>
+                const isM1 = filename.includes('not_deposited');
+                const card = document.createElement('div');
+                card.className = 'gallery-card';
+                card.style.borderColor = isM1 ? 'var(--accent-red)' : 'var(--accent-orange)';
+                card.innerHTML = `
+                    <img src="/defect_images/${filename}" alt="Defect Snapshot">
+                    <div class="gallery-label" style="background: ${isM1 ? 'rgba(255, 51, 102, 0.85)' : 'rgba(255, 153, 0, 0.85)'}">
+                        ${isM1 ? 'EXTRUSION FAIL' : 'ADHESION FAIL'}
+                    </div>
                 `;
-                gallery.appendChild(div);
+                card.onclick = () => window.open(`/defect_images/${filename}`, '_blank');
+                gallery.appendChild(card);
             });
         }
-        
-        function showEmergencyAlert() {
-            const alert = document.getElementById('emergencyAlert');
-            alert.classList.add('active');
-            
-            // Hide after 5 seconds to reduce screen flash toxicity
-            setTimeout(() => {
-                alert.classList.remove('active');
-            }, 5000);
-        }
-        
-        function addFaultLog(accuracy, timestamp, mlStatus) {
-            const log = document.getElementById('faultLog');
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            const issueType = mlStatus && mlStatus !== "Unknown" ? mlStatus.toUpperCase() : "PHYSICAL";
-            entry.textContent = `[${timestamp}] FAULT DETECTED — ${issueType} ISSUE (Acc: ${accuracy}%)`;
-            log.insertBefore(entry, log.firstChild);
-            
-            // Keep cleanly to last 15 entries
-            while (log.children.length > 15) {
-                log.removeChild(log.lastChild);
-            }
-        }
-        
-        // Pulsing camera animation
-        const cameraFeed = document.querySelector('.camera-feed');
-        setInterval(() => {
-            cameraFeed.style.boxShadow = Math.random() > 0.5 
-                ? '0 0 40px rgba(0, 204, 255, 0.7)' 
-                : '0 0 40px rgba(0, 204, 255, 0.4)';
-        }, 1000);
-        
-        // Query the True ML Backend twice a second
+
         setInterval(updateDashboard, 500);
-        updateDashboard(); // Initial call
+        updateDashboard();
     </script>
 </body>
 </html>
